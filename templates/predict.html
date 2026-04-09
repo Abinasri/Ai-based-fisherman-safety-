@@ -1,0 +1,246 @@
+{% extends "base.html" %}
+{% block title %}Risk Predictor — FisherGuard AI{% endblock %}
+{% block head %}
+<style>
+  .predict-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; }
+  .form-group { margin-bottom: 1.2rem; }
+  .form-group label {
+    display: block; font-size: 0.8rem; font-weight: 700;
+    font-family: 'Space Mono', monospace; color: var(--muted);
+    margin-bottom: 0.5rem; letter-spacing: 1px;
+  }
+  .form-group input {
+    width: 100%; padding: 0.75rem 1rem;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid var(--border);
+    border-radius: 8px; color: var(--text);
+    font-family: 'Space Mono', monospace; font-size: 0.9rem;
+    transition: border-color 0.2s;
+  }
+  .form-group input:focus { outline: none; border-color: var(--teal); background: rgba(0,201,177,0.04); }
+  .input-hint { font-size: 0.72rem; color: var(--muted); margin-top: 0.3rem; font-family: 'Space Mono', monospace; }
+  .two-inputs { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+
+  /* Result panel */
+  #resultPanel { display: none; }
+  .score-ring-wrap { text-align: center; margin-bottom: 1.5rem; }
+  .score-ring {
+    width: 140px; height: 140px;
+    border-radius: 50%;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    margin: 0 auto;
+    border: 6px solid;
+    position: relative;
+  }
+  .score-num { font-size: 2.5rem; font-weight: 800; }
+  .score-label { font-size: 0.7rem; font-family: 'Space Mono', monospace; color: var(--muted); }
+  .risk-badge-big {
+    display: block; text-align: center;
+    font-size: 1.3rem; font-weight: 800;
+    margin: 0.8rem 0; letter-spacing: 2px;
+  }
+  .recommendation-box {
+    background: rgba(0,201,177,0.06);
+    border: 1px solid var(--border);
+    border-radius: 10px; padding: 1rem;
+    font-size: 0.88rem; line-height: 1.6;
+    margin-bottom: 1.5rem;
+  }
+
+  /* XAI */
+  .xai-section h3 {
+    font-family: 'Space Mono', monospace; font-size: 0.8rem;
+    color: var(--teal); letter-spacing: 2px;
+    margin-bottom: 1rem;
+  }
+  .shap-bar-wrap { margin-bottom: 0.8rem; }
+  .shap-bar-label { display: flex; justify-content: space-between; font-size: 0.8rem; margin-bottom: 0.3rem; }
+  .shap-bar-track { background: rgba(255,255,255,0.08); border-radius: 999px; height: 10px; overflow: hidden; }
+  .shap-bar-fill { height: 100%; border-radius: 999px; background: var(--teal); transition: width 0.8s ease; }
+  .factors-list { margin-top: 1rem; }
+  .factor-item {
+    display: flex; gap: 0.6rem; align-items: flex-start;
+    font-size: 0.83rem; line-height: 1.5;
+    padding: 0.5rem 0; border-bottom: 1px solid var(--border);
+    color: var(--muted);
+  }
+  .factor-item:last-child { border-bottom: none; }
+  .factor-item .dot { color: var(--teal); flex-shrink: 0; margin-top: 2px; }
+
+  .border-alert {
+    background: rgba(231,76,60,0.12);
+    border: 1px solid rgba(231,76,60,0.5);
+    border-radius: 10px; padding: 1rem;
+    margin-bottom: 1rem; font-size: 0.88rem;
+    display: flex; gap: 0.8rem; align-items: center;
+  }
+  .loading { text-align: center; padding: 2rem; color: var(--muted); font-family: 'Space Mono', monospace; font-size: 0.85rem; }
+
+  @media(max-width:768px){ .predict-grid{grid-template-columns:1fr;} .two-inputs{grid-template-columns:1fr;} }
+</style>
+{% endblock %}
+{% block content %}
+<div class="container">
+  <div class="page-header">
+    <h1>Risk Predictor</h1>
+    <p>// enter vessel & environmental data for AI-powered safety assessment</p>
+  </div>
+
+  <div class="predict-grid">
+    <!-- INPUT FORM -->
+    <div class="card">
+      <div class="two-inputs">
+        <div class="form-group">
+          <label>LATITUDE (°N)</label>
+          <input type="number" id="lat" value="10.5" step="0.01" />
+          <div class="input-hint">e.g. 10.5 (Tamil Nadu coast)</div>
+        </div>
+        <div class="form-group">
+          <label>LONGITUDE (°E)</label>
+          <input type="number" id="lon" value="80.1" step="0.01" />
+          <div class="input-hint">e.g. 80.1</div>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>WIND SPEED (km/h)</label>
+        <input type="number" id="wind_speed" value="25" min="0" max="120" />
+        <div class="input-hint">0 = calm, 80+ = dangerous</div>
+      </div>
+      <div class="form-group">
+        <label>WAVE HEIGHT (metres)</label>
+        <input type="number" id="wave_height" value="1.5" step="0.1" min="0" max="10" />
+        <div class="input-hint">0.5m = calm, 4m+ = dangerous</div>
+      </div>
+      <div class="form-group">
+        <label>VISIBILITY (km)</label>
+        <input type="number" id="visibility" value="5" step="0.5" min="0" max="20" />
+        <div class="input-hint">Below 2km = very foggy</div>
+      </div>
+      <div class="form-group">
+        <label>FISHER EXPERIENCE (years)</label>
+        <input type="number" id="experience" value="5" min="0" max="40" />
+        <div class="input-hint">Years of fishing experience</div>
+      </div>
+      <button class="btn" onclick="runPrediction()" style="width:100%;margin-top:0.5rem">
+        ⚡ Predict Risk
+      </button>
+
+      <div style="margin-top:1.5rem;padding-top:1.2rem;border-top:1px solid var(--border)">
+        <div style="font-family:'Space Mono',monospace;font-size:0.72rem;color:var(--muted);margin-bottom:0.7rem">QUICK TEST SCENARIOS</div>
+        <div style="display:flex;gap:0.6rem;flex-wrap:wrap">
+          <button class="btn btn-outline" style="padding:0.4rem 0.9rem;font-size:0.78rem" onclick="loadScenario('safe')">✅ Safe Day</button>
+          <button class="btn btn-outline" style="padding:0.4rem 0.9rem;font-size:0.78rem" onclick="loadScenario('storm')">🌊 Storm</button>
+          <button class="btn btn-outline" style="padding:0.4rem 0.9rem;font-size:0.78rem" onclick="loadScenario('border')">🚨 Border Risk</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- RESULT PANEL -->
+    <div>
+      <div id="placeholder" class="card" style="text-align:center;padding:3rem 2rem;color:var(--muted)">
+        <div style="font-size:3rem;margin-bottom:1rem">🎯</div>
+        <div style="font-family:'Space Mono',monospace;font-size:0.85rem">Enter data and click<br><strong style="color:var(--teal)">Predict Risk</strong> to see the AI assessment</div>
+      </div>
+      <div id="resultPanel">
+        <div class="card" style="margin-bottom:1.2rem">
+          <div id="borderAlertBox"></div>
+          <div class="score-ring-wrap">
+            <div class="score-ring" id="scoreRing">
+              <div class="score-num" id="scoreNum">—</div>
+              <div class="score-label">RISK SCORE</div>
+            </div>
+          </div>
+          <div class="risk-badge-big" id="riskBadge">—</div>
+          <div class="recommendation-box" id="recommendation"></div>
+        </div>
+
+        <div class="card xai-section">
+          <h3>🧠 XAI EXPLANATION — WHY THIS SCORE?</h3>
+          <div id="shapBars"></div>
+          <div class="factors-list" id="factorsList"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const scenarios = {
+  safe:   { lat:10.8, lon:79.8, wind_speed:12, wave_height:0.8, visibility:9, experience:10 },
+  storm:  { lat:10.1, lon:80.3, wind_speed:68, wave_height:4.5, visibility:1.2, experience:2 },
+  border: { lat:9.5,  lon:80.2, wind_speed:30, wave_height:2.0, visibility:4, experience:5 }
+};
+
+function loadScenario(name) {
+  const s = scenarios[name];
+  document.getElementById('lat').value = s.lat;
+  document.getElementById('lon').value = s.lon;
+  document.getElementById('wind_speed').value = s.wind_speed;
+  document.getElementById('wave_height').value = s.wave_height;
+  document.getElementById('visibility').value = s.visibility;
+  document.getElementById('experience').value = s.experience;
+  runPrediction();
+}
+
+async function runPrediction() {
+  document.getElementById('placeholder').style.display = 'none';
+  document.getElementById('resultPanel').style.display = 'block';
+  document.getElementById('scoreNum').textContent = '...';
+
+  const payload = {
+    lat: document.getElementById('lat').value,
+    lon: document.getElementById('lon').value,
+    wind_speed: document.getElementById('wind_speed').value,
+    wave_height: document.getElementById('wave_height').value,
+    visibility: document.getElementById('visibility').value,
+    experience: document.getElementById('experience').value
+  };
+
+  const res = await fetch('/predict', {
+    method: 'POST',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify(payload)
+  });
+  const data = await res.json();
+
+  // Score ring
+  const ring = document.getElementById('scoreRing');
+  ring.style.borderColor = data.color;
+  document.getElementById('scoreNum').style.color = data.color;
+  document.getElementById('scoreNum').textContent = data.score;
+
+  // Badge
+  const badge = document.getElementById('riskBadge');
+  badge.textContent = data.level + ' RISK';
+  badge.style.color = data.color;
+
+  // Recommendation
+  document.getElementById('recommendation').textContent = data.recommendation;
+
+  // Border alert
+  const alertBox = document.getElementById('borderAlertBox');
+  alertBox.innerHTML = data.border_alert
+    ? `<div class="border-alert">🚨 <div><strong>BORDER CROSSING ALERT</strong><br>${data.border_alert} detected nearby!</div></div>`
+    : '';
+
+  // SHAP bars
+  const maxVal = Math.max(...Object.values(data.shap_values), 1);
+  document.getElementById('shapBars').innerHTML = Object.entries(data.shap_values).map(([k, v]) => `
+    <div class="shap-bar-wrap">
+      <div class="shap-bar-label">
+        <span>${k}</span>
+        <span style="font-family:'Space Mono',monospace;color:var(--teal)">${v} pts</span>
+      </div>
+      <div class="shap-bar-track">
+        <div class="shap-bar-fill" style="width:${(v/maxVal)*100}%"></div>
+      </div>
+    </div>`).join('');
+
+  // Factors
+  document.getElementById('factorsList').innerHTML = data.factors.map(f =>
+    `<div class="factor-item"><span class="dot">▸</span><span>${f}</span></div>`
+  ).join('');
+}
+</script>
+{% endblock %}

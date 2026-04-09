@@ -1,0 +1,126 @@
+{% extends "base.html" %}
+{% block title %}Live Map — FisherGuard AI{% endblock %}
+{% block head %}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<style>
+  .map-layout { display: grid; grid-template-columns: 300px 1fr; gap: 1.5rem; height: calc(100vh - 130px); }
+  #map { border-radius: 12px; border: 1px solid var(--border); }
+  .map-sidebar { display: flex; flex-direction: column; gap: 1rem; overflow-y: auto; }
+  .sidebar-card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 1.2rem; }
+  .sidebar-card h3 { font-family: 'Space Mono', monospace; font-size: 0.75rem; color: var(--teal); letter-spacing: 2px; margin-bottom: 1rem; }
+  .legend-item { display: flex; align-items: center; gap: 0.6rem; font-size: 0.82rem; margin-bottom: 0.5rem; color: var(--muted); }
+  .legend-dot { width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0; }
+  .vessel-mini { padding: 0.6rem 0; border-bottom: 1px solid var(--border); font-size: 0.82rem; cursor: pointer; }
+  .vessel-mini:last-child { border-bottom: none; }
+  .vessel-mini:hover { color: var(--teal); }
+  .vessel-mini .vname { font-weight: 700; }
+  .vessel-mini .vcoord { font-family: 'Space Mono', monospace; font-size: 0.7rem; color: var(--muted); }
+  @media(max-width:768px){ .map-layout{grid-template-columns:1fr; height:auto;} #map{height:400px;} }
+</style>
+{% endblock %}
+{% block content %}
+<div class="container" style="padding-top:1.5rem">
+  <div class="page-header" style="margin-bottom:1rem">
+    <h1>Live Vessel Map</h1>
+    <p>// real-time positions, border zones, and risk overlays</p>
+  </div>
+  <div class="map-layout">
+    <div class="map-sidebar">
+      <div class="sidebar-card">
+        <h3>MAP LEGEND</h3>
+        <div class="legend-item"><div class="legend-dot" style="background:#e74c3c"></div> High Risk Vessel</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#f5a623"></div> Medium Risk Vessel</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#2ecc71"></div> Safe Vessel</div>
+        <div class="legend-item"><div class="legend-dot" style="background:rgba(231,76,60,0.5);border:2px dashed #e74c3c"></div> Border Zone</div>
+        <div class="legend-item"><div class="legend-dot" style="background:rgba(245,166,35,0.4)"></div> Danger Zone</div>
+      </div>
+      <div class="sidebar-card" style="flex:1">
+        <h3>🚢 ACTIVE VESSELS</h3>
+        <div id="vesselList">Loading...</div>
+      </div>
+      <div class="sidebar-card">
+        <h3>ℹ️ INFO</h3>
+        <div style="font-size:0.8rem;color:var(--muted);line-height:1.6">
+          Click any vessel marker for details. Map refreshes every 15 seconds. Border zones shown in red dashed circles.
+        </div>
+      </div>
+    </div>
+    <div id="map"></div>
+  </div>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+const map = L.map('map', { center: [10.5, 80.0], zoom: 8 });
+L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+  attribution: '© OpenStreetMap © CARTO', subdomains: 'abcd', maxZoom: 19
+}).addTo(map);
+
+// Add zones
+fetch('/api/zones').then(r => r.json()).then(data => {
+  data.border_zones.forEach(z => {
+    L.circle([z.lat, z.lon], {
+      radius: z.radius * 111000,
+      color: '#e74c3c', fillColor: '#e74c3c',
+      fillOpacity: 0.08, dashArray: '8 6', weight: 2
+    }).addTo(map).bindPopup(`<b>⚠️ ${z.name}</b><br>International border zone`);
+  });
+  data.danger_zones.forEach(z => {
+    L.circle([z.lat, z.lon], {
+      radius: 60000,
+      color: '#f5a623', fillColor: '#f5a623',
+      fillOpacity: 0.1, weight: 1
+    }).addTo(map).bindPopup(`<b>⚡ ${z.name}</b>`);
+  });
+});
+
+let vesselMarkers = [];
+
+function makeIcon(color) {
+  return L.divIcon({
+    className: '',
+    html: `<div style="
+      width:14px;height:14px;border-radius:50%;
+      background:${color};
+      border:2px solid white;
+      box-shadow:0 0 8px ${color};
+    "></div>`,
+    iconSize: [14, 14], iconAnchor: [7, 7]
+  });
+}
+
+async function refreshVessels() {
+  const res = await fetch('/api/live-data');
+  const vessels = await res.json();
+
+  vesselMarkers.forEach(m => map.removeLayer(m));
+  vesselMarkers = [];
+
+  const list = document.getElementById('vesselList');
+  list.innerHTML = '';
+
+  vessels.forEach(v => {
+    const marker = L.marker([v.lat, v.lon], { icon: makeIcon(v.color) })
+      .addTo(map)
+      .bindPopup(`
+        <div style="font-family:sans-serif;min-width:160px">
+          <strong>${v.name}</strong><br>
+          Risk: <span style="color:${v.color};font-weight:700">${v.risk_level}</span> (${v.risk_score}/100)<br>
+          <small>${v.lat}°N, ${v.lon}°E</small>
+        </div>
+      `);
+    vesselMarkers.push(marker);
+
+    const item = document.createElement('div');
+    item.className = 'vessel-mini';
+    item.innerHTML = `<div class="vname">${v.name} <span style="color:${v.color}">${v.risk_level}</span></div>
+      <div class="vcoord">${v.lat}°N, ${v.lon}°E — Score: ${v.risk_score}</div>`;
+    item.onclick = () => { map.setView([v.lat, v.lon], 11); marker.openPopup(); };
+    list.appendChild(item);
+  });
+}
+
+refreshVessels();
+setInterval(refreshVessels, 15000);
+</script>
+{% endblock %}

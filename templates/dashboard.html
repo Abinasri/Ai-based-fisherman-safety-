@@ -1,0 +1,131 @@
+{% extends "base.html" %}
+{% block title %}Dashboard — FisherGuard AI{% endblock %}
+{% block head %}
+<style>
+  .dash-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1.2rem;
+    margin-bottom: 2rem;
+  }
+  .stat-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1.4rem;
+    text-align: center;
+  }
+  .stat-card .big { font-size: 2.4rem; font-weight: 800; color: var(--teal); }
+  .stat-card .label { font-family: 'Space Mono', monospace; font-size: 0.75rem; color: var(--muted); margin-top: 0.4rem; }
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 2rem; }
+  .card h2 { font-size: 1rem; font-weight: 700; margin-bottom: 1.2rem; color: var(--teal); letter-spacing: 1px; font-family: 'Space Mono', monospace; }
+  .vessel-row {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0.75rem 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 0.88rem;
+  }
+  .vessel-row:last-child { border-bottom: none; }
+  .vessel-name { font-weight: 600; }
+  .vessel-coords { font-family: 'Space Mono', monospace; font-size: 0.75rem; color: var(--muted); }
+  .risk-bar-wrap { margin-bottom: 1rem; }
+  .risk-bar-label { display: flex; justify-content: space-between; font-size: 0.8rem; margin-bottom: 0.3rem; }
+  .risk-bar-track { background: rgba(255,255,255,0.08); border-radius: 999px; height: 8px; overflow: hidden; }
+  .risk-bar-fill { height: 100%; border-radius: 999px; transition: width 1s ease; }
+  .alert-item {
+    background: rgba(231,76,60,0.08);
+    border: 1px solid rgba(231,76,60,0.25);
+    border-radius: 8px;
+    padding: 0.8rem 1rem;
+    margin-bottom: 0.8rem;
+    font-size: 0.85rem;
+    display: flex; align-items: center; gap: 0.7rem;
+  }
+  .alert-item.medium { background: rgba(245,166,35,0.08); border-color: rgba(245,166,35,0.25); }
+  .alert-item.low { background: rgba(46,204,113,0.08); border-color: rgba(46,204,113,0.25); }
+  .refresh-note { font-family: 'Space Mono', monospace; font-size: 0.72rem; color: var(--muted); margin-bottom: 1.5rem; }
+  @media(max-width:768px){ .dash-grid{grid-template-columns:1fr 1fr;} .two-col{grid-template-columns:1fr;} }
+</style>
+{% endblock %}
+{% block content %}
+<div class="container">
+  <div class="page-header">
+    <h1>Safety Dashboard</h1>
+    <p>// fleet overview — live simulated data — auto-refreshes every 10s</p>
+  </div>
+
+  <div class="dash-grid" id="statsGrid">
+    <div class="stat-card"><div class="big" id="totalVessels">—</div><div class="label">Active Vessels</div></div>
+    <div class="stat-card"><div class="big" style="color:#e74c3c" id="highRisk">—</div><div class="label">High Risk</div></div>
+    <div class="stat-card"><div class="big" style="color:#f5a623" id="medRisk">—</div><div class="label">Medium Risk</div></div>
+    <div class="stat-card"><div class="big" style="color:#2ecc71" id="lowRisk">—</div><div class="label">Safe</div></div>
+  </div>
+
+  <div class="two-col">
+    <div class="card">
+      <h2>⚠️ ACTIVE ALERTS</h2>
+      <div id="alertList"><div style="color:var(--muted);font-size:0.85rem;">Loading alerts...</div></div>
+    </div>
+    <div class="card">
+      <h2>📊 RISK DISTRIBUTION</h2>
+      <div id="riskBars"></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>🚢 VESSEL STATUS</h2>
+    <div id="vesselTable"></div>
+  </div>
+</div>
+
+<script>
+async function loadDashboard() {
+  const res = await fetch('/api/live-data');
+  const vessels = await res.json();
+
+  document.getElementById('totalVessels').textContent = vessels.length;
+  const high = vessels.filter(v => v.risk_level === 'HIGH').length;
+  const med  = vessels.filter(v => v.risk_level === 'MEDIUM').length;
+  const low  = vessels.filter(v => v.risk_level === 'LOW').length;
+  document.getElementById('highRisk').textContent = high;
+  document.getElementById('medRisk').textContent  = med;
+  document.getElementById('lowRisk').textContent  = low;
+
+  // Alerts
+  const alertList = document.getElementById('alertList');
+  const alerts = vessels.filter(v => v.risk_level !== 'LOW');
+  alertList.innerHTML = alerts.length === 0
+    ? '<div class="alert-item low">✅ No critical alerts — all vessels safe</div>'
+    : alerts.map(v => `
+      <div class="alert-item ${v.risk_level.toLowerCase()}">
+        ${v.risk_level === 'HIGH' ? '🚨' : '⚡'}
+        <div><strong>${v.name}</strong> — ${v.risk_level} risk (score: ${v.risk_score})<br>
+        <span style="font-family:'Space Mono',monospace;font-size:0.72rem;color:var(--muted)">${v.lat}, ${v.lon}</span></div>
+      </div>`).join('');
+
+  // Risk bars
+  const bars = document.getElementById('riskBars');
+  bars.innerHTML = vessels.map(v => {
+    const color = v.risk_level === 'HIGH' ? '#e74c3c' : v.risk_level === 'MEDIUM' ? '#f5a623' : '#2ecc71';
+    return `<div class="risk-bar-wrap">
+      <div class="risk-bar-label"><span>${v.name}</span><span style="color:${color};font-family:'Space Mono',monospace">${v.risk_score}</span></div>
+      <div class="risk-bar-track"><div class="risk-bar-fill" style="width:${v.risk_score}%;background:${color}"></div></div>
+    </div>`;
+  }).join('');
+
+  // Vessel table
+  const table = document.getElementById('vesselTable');
+  table.innerHTML = vessels.map(v => `
+    <div class="vessel-row">
+      <div>
+        <div class="vessel-name">${v.name}</div>
+        <div class="vessel-coords">${v.lat}°N, ${v.lon}°E</div>
+      </div>
+      <span class="badge badge-${v.risk_level.toLowerCase()}">${v.risk_level}</span>
+    </div>`).join('');
+}
+
+loadDashboard();
+setInterval(loadDashboard, 10000);
+</script>
+{% endblock %}

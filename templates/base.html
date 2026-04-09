@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>{% block title %}FisherGuard AI{% endblock %}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --ocean: #0a1628;
+      --deep: #0d2137;
+      --teal: #00c9b1;
+      --teal-dim: #00877a;
+      --amber: #f5a623;
+      --danger: #e74c3c;
+      --safe: #2ecc71;
+      --text: #d6eaf8;
+      --muted: #7fb3d3;
+      --card: rgba(13,33,55,0.85);
+      --border: rgba(0,201,177,0.18);
+    }
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body {
+      background: var(--ocean);
+      color: var(--text);
+      font-family: 'Syne', sans-serif;
+      min-height: 100vh;
+      background-image:
+        radial-gradient(ellipse at 20% 50%, rgba(0,201,177,0.06) 0%, transparent 60%),
+        radial-gradient(ellipse at 80% 20%, rgba(0,100,180,0.08) 0%, transparent 50%);
+    }
+    nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 1rem 2.5rem;
+      background: rgba(10,22,40,0.95);
+      border-bottom: 1px solid var(--border);
+      position: sticky; top:0; z-index:100;
+      backdrop-filter: blur(12px);
+    }
+    .nav-logo {
+      font-size: 1.3rem;
+      font-weight: 800;
+      color: var(--teal);
+      letter-spacing: -0.5px;
+    }
+    .nav-logo span { color: var(--text); }
+    .nav-links { display: flex; gap: 2rem; }
+    .nav-links a {
+      color: var(--muted);
+      text-decoration: none;
+      font-size: 0.9rem;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+      transition: color 0.2s;
+    }
+    .nav-links a:hover, .nav-links a.active { color: var(--teal); }
+    .container { max-width: 1200px; margin: 0 auto; padding: 2rem 2rem; }
+    .page-header { margin-bottom: 2.5rem; }
+    .page-header h1 { font-size: 2rem; font-weight: 800; color: var(--teal); }
+    .page-header p { color: var(--muted); margin-top: 0.4rem; font-family: 'Space Mono', monospace; font-size: 0.82rem; }
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.5rem;
+      backdrop-filter: blur(8px);
+    }
+    .badge {
+      display: inline-block;
+      padding: 0.25rem 0.75rem;
+      border-radius: 999px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      font-family: 'Space Mono', monospace;
+      letter-spacing: 1px;
+    }
+    .badge-high   { background: rgba(231,76,60,0.2);  color: #e74c3c; border: 1px solid rgba(231,76,60,0.4); }
+    .badge-medium { background: rgba(243,156,18,0.2); color: #f5a623; border: 1px solid rgba(243,156,18,0.4); }
+    .badge-low    { background: rgba(46,204,113,0.2); color: #2ecc71; border: 1px solid rgba(46,204,113,0.4); }
+    .btn {
+      background: var(--teal);
+      color: var(--ocean);
+      border: none;
+      padding: 0.75rem 2rem;
+      border-radius: 8px;
+      font-family: 'Syne', sans-serif;
+      font-weight: 700;
+      font-size: 0.95rem;
+      cursor: pointer;
+      transition: all 0.2s;
+      letter-spacing: 0.5px;
+    }
+    .btn:hover { background: #00fff0; transform: translateY(-1px); box-shadow: 0 4px 20px rgba(0,201,177,0.3); }
+    .btn-outline {
+      background: transparent;
+      color: var(--teal);
+      border: 1px solid var(--teal);
+    }
+    .btn-outline:hover { background: rgba(0,201,177,0.1); }
+    footer {
+      text-align: center;
+      padding: 2rem;
+      color: var(--muted);
+      font-size: 0.8rem;
+      font-family: 'Space Mono', monospace;
+      border-top: 1px solid var(--border);
+      margin-top: 4rem;
+    }
+  </style>
+  {% block head %}{% endblock %}
+</head>
+<body>
+  <nav>
+    <div class="nav-logo">Fisher<span>Guard</span> AI</div>
+    <div class="nav-links">
+      <a href="/" class="{% if request.path == '/' %}active{% endif %}">Home</a>
+      <a href="/dashboard" class="{% if request.path == '/dashboard' %}active{% endif %}">Dashboard</a>
+      <a href="/predict" class="{% if request.path == '/predict' %}active{% endif %}">Risk Predictor</a>
+      <a href="/map" class="{% if request.path == '/map' %}active{% endif %}">Live Map</a>
+    </div>
+  </nav>
+
+  {% block content %}{% endblock %}
+
+  <footer>FisherGuard AI &mdash; Explainable AI for Maritime Safety &mdash; Dept. of AI & Data Science</footer>
+</body>
+</html>
