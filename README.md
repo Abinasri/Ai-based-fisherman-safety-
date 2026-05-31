@@ -1,100 +1,62 @@
-🚢 FisherGuard AI
-An Explainable AI-Based Web System for Fishermen Safety, Location and Border Risk Assessment
+# 🚢 FisherGuard AI
 
-FisherGuard AI is a web-based safety monitoring and risk assessment platform designed to improve the safety of fishermen operating in coastal and international maritime regions. The system combines Explainable Artificial Intelligence (XAI), risk prediction, border proximity detection, and real-time vessel monitoring to help fishermen avoid dangerous situations at sea.
+## 📌 Project Overview
 
-📌 Project Overview
+**FisherGuard AI** is an Explainable Artificial Intelligence (XAI)-based web application designed to improve the safety of fishermen operating in coastal and international maritime regions. The system predicts voyage risk levels using multiple environmental and geographical factors and provides transparent explanations for every prediction.
 
-Fishing is one of the most hazardous occupations due to:
+Unlike traditional vessel tracking systems, FisherGuard AI combines **risk prediction, border proximity detection, danger zone identification, and Explainable AI** into a single browser-accessible platform.
 
-Extreme weather conditions
-High sea waves
-Poor visibility
-Maritime border crossing risks
-Lack of intelligent safety prediction systems
+This system is suitable for **fishermen, coast guard authorities, maritime safety organizations, and coastal monitoring agencies**.
 
-FisherGuard AI provides a browser-accessible platform that predicts voyage safety risks and explains the reasons behind each prediction using Explainable AI techniques.
+---
 
-🎯 Objectives
-Predict fishing voyage risk levels.
-Detect proximity to international maritime borders.
-Identify dangerous maritime zones.
-Provide Explainable AI (XAI) insights.
-Monitor multiple vessels through a live dashboard.
-Display vessel locations on an interactive map.
-Offer actionable safety recommendations.
-✨ Key Features
-🌊 Multi-Factor Risk Prediction
+## 🌟 Key Features
 
-The system evaluates:
+* ✅ Multi-factor voyage risk prediction
+* 🧠 Explainable AI (XAI) risk analysis
+* 🌊 Weather and sea condition assessment
+* 🚨 Maritime border proximity alerts
+* ⚠️ Danger zone detection
+* 📊 Real-time fleet monitoring dashboard
+* 🗺️ Interactive live vessel map
+* 📱 Browser-based access with no special hardware required
 
-Wind Speed
-Wave Height
-Visibility
-Fishing Experience
-Border Proximity
-Danger Zone Presence
+---
 
-and generates a risk score between 0 and 100.
+## 🛠️ Tech Stack
 
-🧠 Explainable AI (XAI)
-SHAP-inspired contribution analysis
-Visual risk factor breakdown
-Natural language explanations
-🚨 Border Risk Detection
-Detects proximity to maritime boundaries
-Alerts fishermen before entering restricted zones
-Prevents accidental border crossings
-🗺️ Interactive Live Map
-Real-time vessel tracking
-Border zone visualization
-Danger zone overlays
-Risk-colored vessel markers
-📊 Safety Dashboard
-Fleet monitoring
-Risk distribution analysis
-Active alert notifications
-Auto-refreshing live updates
-📱 Browser Based Access
-No special hardware required
-Accessible from any modern browser
-Mobile-friendly interface
-🏗️ System Architecture
-User Interface
-     │
-     ▼
- Flask Web Server
-     │
- ┌───┼───────────────┐
- │   │               │
- ▼   ▼               ▼
-Risk Engine     XAI Module
-                     │
-                     ▼
-          Border Detection
-                     │
-                     ▼
-              JSON Response
-                     │
-                     ▼
-      Dashboard / Map / Alerts
-🛠️ Technology Stack
-Backend
-Python 3.11
-Flask 3.0
-Frontend
-HTML5
-CSS3
-JavaScript (ES6)
-Mapping
-Leaflet.js
-CartoDB Dark Matter Tiles
-AI & Analytics
-Rule-Based Risk Scoring Engine
-SHAP-Inspired Explainable AI
-Geographic Computation
-Haversine Formula
-📂 Project Structure
+### Frontend
+
+* HTML5
+* CSS3
+* JavaScript
+* Leaflet.js
+
+### Backend
+
+* Python
+* Flask 3.0
+
+### AI & Analytics
+
+* Rule-Based Risk Scoring Engine
+* SHAP-Inspired Explainable AI
+
+### Geographic Processing
+
+* Haversine Distance Formula
+
+### Tools
+
+* VS Code
+* GitHub
+* Ngrok (for deployment)
+
+---
+
+## 📂 Project Structure
+
+```text
 FisherGuard-AI/
 │
 ├── app.py
@@ -113,74 +75,141 @@ FisherGuard-AI/
 ├── requirements.txt
 │
 └── README.md
-⚙️ Installation
-1️⃣ Clone Repository
+```
+
+---
+
+## ⚙️ How It Works
+
+1. User enters vessel location and environmental details.
+2. System evaluates:
+
+   * Wind Speed
+   * Wave Height
+   * Visibility
+   * Fishing Experience
+   * Border Proximity
+   * Danger Zone Presence
+3. Risk scoring engine calculates a score between 0–100.
+4. Explainable AI module shows factor contributions.
+5. Border and danger zone detection modules generate alerts.
+6. Dashboard and live map display vessel status in real time.
+
+---
+
+## ▶️ How to Run the Project
+
+### Prerequisites
+
+* Python 3.11 or later
+* Flask 3.0
+* Internet connection
+
+### Steps
+
+```bash
+# Clone repository
 git clone https://github.com/your-username/FisherGuard-AI.git
 
+# Navigate to project folder
 cd FisherGuard-AI
-2️⃣ Create Virtual Environment
-python -m venv venv
 
-Activate:
-
-Windows
-
-venv\Scripts\activate
-
-Linux/Mac
-
-source venv/bin/activate
-3️⃣ Install Dependencies
+# Install dependencies
 pip install -r requirements.txt
-4️⃣ Run Application
+
+# Run application
 python app.py
-5️⃣ Open Browser
+```
+
+### Open Browser
+
+```text
 http://127.0.0.1:5000
-📈 Risk Classification
-Risk Score	Risk Level
-0 – 39	LOW
-40 – 69	MEDIUM
-70 – 100	HIGH
-🚨 Safety Recommendations
-LOW Risk
-Safe to proceed.
-Follow standard safety practices.
-MEDIUM Risk
-Exercise caution.
-Monitor weather and sea conditions.
-HIGH Risk
-Avoid departure.
-Seek shelter immediately.
-Contact coast guard if necessary.
-🌍 Sustainable Development Goals (SDGs)
+```
 
-This project supports:
+---
 
-SDG 3 – Good Health and Well-Being
-SDG 9 – Industry, Innovation and Infrastructure
-SDG 10 – Reduced Inequalities
-SDG 16 – Peace, Justice and Strong Institutions
-🔮 Future Enhancements
-Live Weather API Integration
-AIS Vessel Tracking Integration
-Machine Learning Risk Prediction Models
-Multi-language Support
-PostgreSQL Database Integration
-SMS and Mobile Alerts
-Mobile Application Development
-👨‍💻 Authors
+## 🧪 Sample Use Cases
 
-Abinasri E
-B.Tech Artificial Intelligence and Data Science
+### Safe Day Scenario
 
-Ancy Antony A L
-B.Tech Artificial Intelligence and Data Science
+* Low wind speed
+* Good visibility
+* Calm sea conditions
 
-St. Joseph's College of Engineering, Chennai
-Academic Year: 2025–2026
+Result:
 
-📜 License
+* LOW Risk
 
-This project is developed for academic and research purposes. Feel free to modify and extend it for educational use.
+### Storm Scenario
 
-⭐ FisherGuard AI aims to make fishing safer through Explainable Artificial Intelligence and real-time maritime risk assessment.
+* High wind speed
+* High wave height
+* Poor visibility
+
+Result:
+
+* HIGH Risk with emergency recommendation
+
+### Border Risk Scenario
+
+* Vessel close to international maritime boundary
+
+Result:
+
+* Border Alert generated
+* Increased risk score
+
+---
+
+## 🎯 Advantages
+
+* Improves fishermen safety
+* Predicts risks before departure
+* Prevents accidental border crossings
+* Provides transparent AI explanations
+* Supports coast guard monitoring
+* No expensive hardware required
+* Easy to deploy and maintain
+
+---
+
+## 🚀 Future Enhancements
+
+* Live Weather API Integration
+* AIS Vessel Tracking Integration
+* Machine Learning Risk Prediction Models
+* SMS and Mobile Notifications
+* Multi-language Support
+* PostgreSQL Database Integration
+* Mobile Application Development
+
+---
+
+## 🌍 Sustainable Development Goals (SDGs)
+
+* SDG 3 – Good Health and Well-Being
+* SDG 9 – Industry, Innovation and Infrastructure
+* SDG 10 – Reduced Inequalities
+* SDG 16 – Peace, Justice and Strong Institutions
+
+---
+
+## 👩‍💻 Authors
+
+**Abinasri E**
+B.Tech – Artificial Intelligence and Data Science
+
+**Ancy Antony A L**
+B.Tech – Artificial Intelligence and Data Science
+
+**St. Joseph's College of Engineering, Chennai**
+
+---
+
+## 📜 License
+
+This project is developed for educational and research purposes. Feel free to use, modify, and extend it for academic projects.
+
+⭐ *FisherGuard AI – Empowering Fishermen Safety through Explainable Artificial Intelligence.*
+
